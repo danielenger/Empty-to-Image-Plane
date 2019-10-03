@@ -26,7 +26,7 @@ bl_info = {
 
 import bpy
 
-from .empty_image_planes import *
+from .empty_to_image_plane import *
 
 classes = (
     EMPTPYTOIMAGEPLANE_PT_panel,
