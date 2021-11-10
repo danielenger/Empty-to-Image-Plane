@@ -58,17 +58,37 @@ def image_plane_at_image_emtpy(empty, prefix="Image Plane"):
     mat = bpy.data.materials.new(img.name)
     mat.use_nodes = True
     plane.data.materials.append(mat)
-
-    mat_output = mat.node_tree.nodes['Material Output']
+    
+    mat.node_tree.nodes.clear()
+        
+        #create the nodes
+    mat_output = mat.node_tree.nodes.new(type="ShaderNodeOutputMaterial")
     img_node = mat.node_tree.nodes.new(type="ShaderNodeTexImage")
     emit_node = mat.node_tree.nodes.new(type='ShaderNodeEmission')
-    mat.node_tree.links.new(
-        img_node.outputs['Color'], emit_node.inputs['Color'])
-    mat.node_tree.links.new(emit_node.outputs[0], mat_output.inputs[0])
-
+    invert_node = mat.node_tree.nodes.new(type='ShaderNodeInvert')
+    transparent_node = mat.node_tree.nodes.new(type='ShaderNodeBsdfTransparent')
+    mix_node = mat.node_tree.nodes.new(type='ShaderNodeMixShader')
+    
+        #create the links    
+    mat.node_tree.links.new(img_node.outputs['Color'], emit_node.inputs['Color'])
+    mat.node_tree.links.new(emit_node.outputs[0], mix_node.inputs[1])
+    mat.node_tree.links.new(img_node.outputs['Alpha'], invert_node.inputs['Color'])
+    mat.node_tree.links.new(invert_node.outputs['Color'], mix_node.inputs['Fac'])
+    mat.node_tree.links.new(transparent_node.outputs[0], mix_node.inputs[2])
+    mat.node_tree.links.new(mix_node.outputs[0], mat_output.inputs['Surface'])
+    
+        #make the transparent areas transparent in the viewport
+    mat.blend_method = 'CLIP'
+    
+        #node positionning
     img_node.image = img
-    img_node.location.x = -500
-    emit_node.location.x = -200
+    img_node.location.x = -700
+    invert_node.location.x = -400
+    invert_node.location.y = 150
+    emit_node.location.x = -400
+    transparent_node.location.x = -400
+    transparent_node.location.y = -150
+    mix_node.location.x = -200    
 
     plane.name = prefix + img.name
 
